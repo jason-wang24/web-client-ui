@@ -38,6 +38,7 @@ export type LinkerOverlayContentProps = {
   disabled?: boolean;
   links: Link[];
   selectedIds: Set<string>;
+  dimIds: Set<string>;
   messageText: string;
   onLinkSelected: (linkId: string) => void;
   onLinkDeleted: (linkId: string) => void;
@@ -244,6 +245,7 @@ export class LinkerOverlayContent extends Component<
       disabled,
       links,
       selectedIds,
+      dimIds,
       messageText,
       onLinkSelected,
       onLinkDeleted,
@@ -275,6 +277,7 @@ export class LinkerOverlayContent extends Component<
             { 'link-invalid': type === 'invalid' },
             { interactive: link.end == null },
             { 'link-is-selected': selectedIds.has(id) },
+            { 'dim-link': dimIds.has(id) },
             { 'danger-delete': mode === 'delete' }
           );
           return {

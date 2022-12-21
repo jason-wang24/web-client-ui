@@ -86,6 +86,7 @@ export type LinkerProps = OwnProps &
 export type LinkerState = {
   linkInProgress?: Link;
   selectedIds: Set<string>;
+  dimIds: Set<string>;
 };
 
 export class Linker extends Component<LinkerProps, LinkerState> {
@@ -110,7 +111,11 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     this.handleLinkSelected = this.handleLinkSelected.bind(this);
     this.isColumnSelectionValid = this.isColumnSelectionValid.bind(this);
 
-    this.state = { linkInProgress: undefined, selectedIds: new Set<string>() };
+    this.state = {
+      linkInProgress: undefined,
+      selectedIds: new Set<string>(),
+      dimIds: new Set<string>(),
+    };
   }
 
   componentDidMount(): void {
@@ -179,7 +184,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
       const { setActiveTool } = this.props;
       setActiveTool(ToolType.DEFAULT);
     }
-    this.setState({ linkInProgress: undefined });
+    this.setState({ linkInProgress: undefined, dimIds: new Set<string>() });
   }
 
   handleDone(): void {
@@ -188,6 +193,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     this.setState({
       linkInProgress: undefined,
       selectedIds: new Set<string>(),
+      dimIds: new Set<string>(),
     });
   }
 
@@ -268,7 +274,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     if (overrideIsolatedLinkerPanelId === undefined && !this.isOverlayShown()) {
       return;
     }
-    const { isolatedLinkerPanelId } = this.props;
+    const { isolatedLinkerPanelId, links } = this.props;
     const { linkInProgress } = this.state;
     const panelId = LayoutUtils.getIdFromPanel(panel);
     if (panelId == null) {
@@ -292,9 +298,14 @@ export class Linker extends Component<LinkerProps, LinkerState> {
 
       log.debug('starting link', newLink);
 
-      this.setState({ linkInProgress: newLink });
+      const newDimIds = new Set<string>();
+      for (let i = 0; i < links.length; i += 1) {
+        if (links[i].start.panelId !== panelId) {
+          newDimIds.add(links[i].id);
+        }
+      }
+      this.setState({ linkInProgress: newLink, dimIds: newDimIds });
     } else {
-      const { links } = this.props;
       const { start, id, isReversed } = linkInProgress;
       const end = {
         panelId,
@@ -345,7 +356,11 @@ export class Linker extends Component<LinkerProps, LinkerState> {
       log.info('creating link', newLink);
 
       this.setState(
-        { linkInProgress: undefined, selectedIds: new Set<string>([id]) },
+        {
+          linkInProgress: undefined,
+          selectedIds: new Set<string>([id]),
+          dimIds: new Set<string>(),
+        },
         () => {
           // Adding link after updating state
           // otherwise both new link and linkInProgress could be rendered at the same time
@@ -657,7 +672,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
 
   render(): JSX.Element {
     const { links, isolatedLinkerPanelId, panelManager } = this.props;
-    const { linkInProgress, selectedIds } = this.state;
+    const { linkInProgress, selectedIds, dimIds } = this.state;
 
     const isLinkOverlayShown = this.isOverlayShown();
     const disabled = linkInProgress != null && linkInProgress.start != null;
@@ -684,6 +699,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
             isolatedLinkerPanelId
           )}
           selectedIds={selectedIds}
+          dimIds={dimIds}
           messageText={linkerOverlayMessage}
           onLinkSelected={this.handleLinkSelected}
           onLinkDeleted={this.handleLinkDeleted}

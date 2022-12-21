@@ -324,7 +324,9 @@ export class LinkerLink extends Component<LinkerLinkProps, LinkerLinkState> {
           <>
             <Button
               kind="primary"
-              className="btn-fab btn-operator"
+              className={classNames('btn-fab btn-operator', {
+                'dim-link': className.includes('dim-link'),
+              })}
               style={{
                 top: midY + (slopeAtMid >= 0 ? topOffsetY : bottomOffsetY),
                 left: midX + (slopeAtMid >= 0 ? topOffsetX : bottomOffsetX),
@@ -350,7 +352,9 @@ export class LinkerLink extends Component<LinkerLinkProps, LinkerLinkState> {
             </Button>
             <Button
               kind="primary"
-              className="btn-fab btn-delete"
+              className={classNames('btn-fab btn-delete', {
+                'dim-link': className.includes('dim-link'),
+              })}
               style={{
                 top: midY + (slopeAtMid < 0 ? topOffsetY : bottomOffsetY),
                 left: midX + (slopeAtMid < 0 ? topOffsetX : bottomOffsetX),

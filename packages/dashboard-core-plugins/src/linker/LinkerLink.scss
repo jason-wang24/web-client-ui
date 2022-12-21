@@ -66,6 +66,10 @@ $dash-size: 10;
       }
     }
 
+    &.dim-link {
+      opacity: 0.25;
+    }
+
     &.link-filter-source {
       .link-dot,
       .link-triangle {
@@ -167,6 +171,9 @@ $dash-size: 10;
         // comparison operator
         font-size: $font-size-lg;
       }
+    }
+    &.dim-link {
+      opacity: 0.25;
     }
   }
 
