@@ -87,6 +87,7 @@ export type LinkerState = {
   linkInProgress?: Link;
   selectedIds: Set<string>;
   dimIds: Set<string>;
+  isDraggingPanel: boolean;
 };
 
 export class Linker extends Component<LinkerProps, LinkerState> {
@@ -109,12 +110,15 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     this.handleStateChange = this.handleStateChange.bind(this);
     this.handleExited = this.handleExited.bind(this);
     this.handleLinkSelected = this.handleLinkSelected.bind(this);
+    this.handlePanelDragging = this.handlePanelDragging.bind(this);
+    this.handlePanelDropped = this.handlePanelDropped.bind(this);
     this.isColumnSelectionValid = this.isColumnSelectionValid.bind(this);
 
     this.state = {
       linkInProgress: undefined,
       selectedIds: new Set<string>(),
       dimIds: new Set<string>(),
+      isDraggingPanel: false,
     };
   }
 
@@ -132,6 +136,9 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     }
     if (activeTool !== prevProps.activeTool) {
       this.updateSelectionValidators();
+      if (activeTool === ToolType.DEFAULT) {
+        this.reset();
+      }
     }
   }
 
@@ -158,7 +165,10 @@ export class Linker extends Component<LinkerProps, LinkerState> {
       this.handleFilterColumnSelect
     );
     eventHub.on(InputFilterEvent.COLUMNS_CHANGED, this.handleColumnsChanged);
+    eventHub.on(PanelEvent.CLOSE, this.handlePanelClosed);
     eventHub.on(PanelEvent.CLOSED, this.handlePanelClosed);
+    eventHub.on(PanelEvent.DRAGGING, this.handlePanelDragging);
+    eventHub.on(PanelEvent.DROPPED, this.handlePanelDropped);
   }
 
   stopListening(layout: GoldenLayout): void {
@@ -175,7 +185,18 @@ export class Linker extends Component<LinkerProps, LinkerState> {
       this.handleFilterColumnSelect
     );
     eventHub.off(InputFilterEvent.COLUMNS_CHANGED, this.handleColumnsChanged);
+    eventHub.off(PanelEvent.CLOSE, this.handlePanelClosed);
     eventHub.off(PanelEvent.CLOSED, this.handlePanelClosed);
+    eventHub.off(PanelEvent.DRAGGING, this.handlePanelDragging);
+    eventHub.off(PanelEvent.DROPPED, this.handlePanelDropped);
+  }
+
+  reset(): void {
+    this.setState({
+      linkInProgress: undefined,
+      selectedIds: new Set<string>(),
+      dimIds: new Set<string>(),
+    });
   }
 
   handleCancel(): void {
@@ -190,11 +211,6 @@ export class Linker extends Component<LinkerProps, LinkerState> {
   handleDone(): void {
     const { setActiveTool } = this.props;
     setActiveTool(ToolType.DEFAULT);
-    this.setState({
-      linkInProgress: undefined,
-      selectedIds: new Set<string>(),
-      dimIds: new Set<string>(),
-    });
   }
 
   handleChartColumnSelect(panel: PanelComponent, column: LinkColumn): void {
@@ -440,7 +456,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
       );
       this.deleteLinks(isolatedLinks);
     }
-    this.setState({ linkInProgress: undefined });
+    this.reset();
   }
 
   handleLinkDeleted(linkId: string): void {
@@ -523,8 +539,24 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     }
   }
 
+  handlePanelDragging(componentId: string): void {
+    const { links } = this.props;
+    for (let i = 0; i < links.length; i += 1) {
+      const link = links[i];
+      const { start, end } = link;
+      if (start.panelId === componentId || end?.panelId === componentId) {
+        this.setState({ isDraggingPanel: true });
+        return;
+      }
+    }
+  }
+
+  handlePanelDropped(): void {
+    this.setState({ isDraggingPanel: false });
+  }
+
   handlePanelClosed(panelId: string): void {
-    // Delete links on PanelEvent.CLOSED instead of UNMOUNT
+    // Delete links on PanelEvent.CLOSE and PanelEvent.CLOSED instead of UNMOUNT
     // because the panels can get unmounted on errors and we want to keep the links if that happens
     log.debug(`Panel ${panelId} closed, deleting links.`);
     this.deleteLinksForPanelId(panelId);
@@ -670,18 +702,18 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     return type !== 'invalid';
   }
 
-  render(): JSX.Element {
+  render(): JSX.Element | null {
     const { links, isolatedLinkerPanelId, panelManager } = this.props;
-    const { linkInProgress, selectedIds, dimIds } = this.state;
+    const { linkInProgress, selectedIds, isDraggingPanel, dimIds } = this.state;
 
     const isLinkOverlayShown = this.isOverlayShown();
     const disabled = linkInProgress != null && linkInProgress.start != null;
     const linkerOverlayMessage =
       isolatedLinkerPanelId === undefined
-        ? 'Click a column source, then click a column target to create a filter link. Remove a filter link by clicking again to erase. Click done when finished.'
-        : 'Create a link between the source column button and a table column by clicking on one, then the other. Remove the link by clicking it directly. Click done when finished.';
+        ? 'Click a column source, then click a column target to create a filter link. The filter comparison operator used by a selected link can be changed. Delete a filter link by clicking the delete button or with alt+click. Click done when finished.'
+        : 'Create a link between the source column button and a table column by clicking on one, then the other. Delete a filter link by clicking the delete button or with alt+click. Click done when finished.';
 
-    return (
+    return !isDraggingPanel ? (
       <CSSTransition
         in={isLinkOverlayShown}
         timeout={ThemeExport.transitionMs}
@@ -709,7 +741,7 @@ export class Linker extends Component<LinkerProps, LinkerState> {
           onCancel={this.handleCancel}
         />
       </CSSTransition>
-    );
+    ) : null;
   }
 }
 

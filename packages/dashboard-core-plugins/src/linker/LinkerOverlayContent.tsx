@@ -223,6 +223,10 @@ export class LinkerOverlayContent extends Component<
       this.setState({
         mode: 'delete',
       });
+    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+      const { selectedIds, onLinkDeleted } = this.props;
+      event.preventDefault();
+      selectedIds.forEach(id => onLinkDeleted(id));
     }
   }
 
@@ -291,7 +295,7 @@ export class LinkerOverlayContent extends Component<
             startColumnType,
           };
         } catch (error) {
-          log.error('Unable to get point for link', link, error);
+          log.warn('Unable to get point for link', link, error);
           return null;
         }
       })
