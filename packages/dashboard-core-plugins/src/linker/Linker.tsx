@@ -113,6 +113,8 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     this.handlePanelDragging = this.handlePanelDragging.bind(this);
     this.handlePanelDropped = this.handlePanelDropped.bind(this);
     this.isColumnSelectionValid = this.isColumnSelectionValid.bind(this);
+    this.handleGridTableEntered = this.handleGridTableEntered.bind(this);
+    this.handleGridTableLeave = this.handleGridTableLeave.bind(this);
 
     this.state = {
       linkInProgress: undefined,
@@ -169,6 +171,8 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     eventHub.on(PanelEvent.CLOSED, this.handlePanelClosed);
     eventHub.on(PanelEvent.DRAGGING, this.handlePanelDragging);
     eventHub.on(PanelEvent.DROPPED, this.handlePanelDropped);
+    eventHub.on(IrisGridEvent.TABLE_ENTERED, this.handleGridTableEntered);
+    eventHub.on(IrisGridEvent.TABLE_LEAVE, this.handleGridTableLeave);
   }
 
   stopListening(layout: GoldenLayout): void {
@@ -189,6 +193,8 @@ export class Linker extends Component<LinkerProps, LinkerState> {
     eventHub.off(PanelEvent.CLOSED, this.handlePanelClosed);
     eventHub.off(PanelEvent.DRAGGING, this.handlePanelDragging);
     eventHub.off(PanelEvent.DROPPED, this.handlePanelDropped);
+    eventHub.off(IrisGridEvent.TABLE_ENTERED, this.handleGridTableEntered);
+    eventHub.off(IrisGridEvent.TABLE_LEAVE, this.handleGridTableLeave);
   }
 
   reset(): void {
@@ -272,6 +278,32 @@ export class Linker extends Component<LinkerProps, LinkerState> {
 
   handleGridColumnSelect(panel: PanelComponent, column: LinkColumn): void {
     this.columnSelected(panel, column);
+  }
+
+  handleGridTableEntered(panel: PanelComponent): void {
+    const { linkInProgress } = this.state;
+    if (!linkInProgress) {
+      const { links } = this.props;
+      const panelId = LayoutUtils.getIdFromPanel(panel);
+      if (panelId == null) {
+        return;
+      }
+      const newDimIds = new Set<string>();
+      for (let i = 0; i < links.length; i += 1) {
+        if (links[i].start.panelId !== panelId) {
+          newDimIds.add(links[i].id);
+        }
+      }
+      this.setState({ dimIds: newDimIds });
+    }
+  }
+
+  handleGridTableLeave(): void {
+    // to leave or not to leave
+    const { linkInProgress } = this.state;
+    if (!linkInProgress) {
+      this.setState({ dimIds: new Set<string>() });
+    }
   }
 
   /**

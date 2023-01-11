@@ -9,6 +9,10 @@ class IrisGridEvent {
 
   static COLUMN_SELECTED = 'IrisGridEvent.COLUMN_SELECTED';
 
+  static TABLE_ENTERED = 'IrisGridEvent.TABLE_ENTERED';
+
+  static TABLE_LEAVE = 'IrisGridEvent.TABLE_LEAVE';
+
   static STATE_CHANGED = 'IrisGridEvent.STATE_CHANGED';
 
   static CREATE_CHART = 'IrisGridevent.CREATE_CHART';

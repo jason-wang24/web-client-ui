@@ -251,6 +251,8 @@ export interface IrisGridProps {
   model: IrisGridModel;
   onCreateChart: (settings: ChartBuilderSettings, model: IrisGridModel) => void;
   onColumnSelected: (column: Column) => void;
+  onTableEnter: () => void;
+  onTableLeave: () => void;
   onError: (error: unknown) => void;
   onDataSelected: (index: ModelIndex, map: Record<ColumnName, unknown>) => void;
   onStateChange: (irisGridState: IrisGridState, gridState: GridState) => void;
@@ -428,6 +430,8 @@ export class IrisGrid extends Component<IrisGridProps, IrisGridState> {
     customFilters: [],
     onCreateChart: undefined,
     onColumnSelected: (): void => undefined,
+    onTableEnter: (): void => undefined,
+    onTableLeave: (): void => undefined,
     onDataSelected: (): void => undefined,
     onError: (): void => undefined,
     onStateChange: (): void => undefined,
@@ -586,6 +590,8 @@ export class IrisGrid extends Component<IrisGridProps, IrisGridState> {
     this.handleGotoRowSelectedRowNumberChanged = this.handleGotoRowSelectedRowNumberChanged.bind(
       this
     );
+    this.handleGridWrapperEnter = this.handleGridWrapperEnter.bind(this);
+    this.handleGridWrapperLeave = this.handleGridWrapperLeave.bind(this);
 
     this.grid = null;
     this.gridWrapper = null;
@@ -2602,6 +2608,16 @@ export class IrisGrid extends Component<IrisGridProps, IrisGridState> {
     }
   }
 
+  handleGridWrapperEnter(): void {
+    const { onTableEnter } = this.props;
+    onTableEnter();
+  }
+
+  handleGridWrapperLeave(): void {
+    const { onTableLeave } = this.props;
+    onTableLeave();
+  }
+
   handleCancel(): void {
     this.rollback();
   }
@@ -4073,6 +4089,8 @@ export class IrisGrid extends Component<IrisGridProps, IrisGridState> {
             ref={gridWrapper => {
               this.gridWrapper = gridWrapper;
             }}
+            onMouseEnter={this.handleGridWrapperEnter}
+            onMouseLeave={this.handleGridWrapperLeave}
           >
             <Grid
               ref={grid => {

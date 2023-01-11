@@ -216,6 +216,8 @@ export class IrisGridPanel extends PureComponent<
     this.handleColumnsChanged = this.handleColumnsChanged.bind(this);
     this.handleTableChanged = this.handleTableChanged.bind(this);
     this.handleColumnSelected = this.handleColumnSelected.bind(this);
+    this.handleTableEnter = this.handleTableEnter.bind(this);
+    this.handleTableLeave = this.handleTableLeave.bind(this);
     this.handleDataSelected = this.handleDataSelected.bind(this);
     this.handleError = this.handleError.bind(this);
     this.handleGridStateChange = this.handleGridStateChange.bind(this);
@@ -728,6 +730,16 @@ export class IrisGridPanel extends PureComponent<
   handleColumnSelected(column: Column): void {
     const { glEventHub } = this.props;
     glEventHub.emit(IrisGridEvent.COLUMN_SELECTED, this, column);
+  }
+
+  handleTableEnter(): void {
+    const { glEventHub } = this.props;
+    glEventHub.emit(IrisGridEvent.TABLE_ENTERED, this);
+  }
+
+  handleTableLeave(): void {
+    const { glEventHub } = this.props;
+    glEventHub.emit(IrisGridEvent.TABLE_LEAVE);
   }
 
   handleDataSelected(row: ModelIndex, dataMap: Record<string, unknown>): void {
@@ -1311,6 +1323,8 @@ export class IrisGridPanel extends PureComponent<
             selectDistinctColumns={selectDistinctColumns}
             invertSearchColumns={invertSearchColumns}
             onColumnSelected={this.handleColumnSelected}
+            onTableEnter={this.handleTableEnter}
+            onTableLeave={this.handleTableLeave}
             onCreateChart={this.handleCreateChart}
             onDataSelected={this.handleDataSelected}
             onError={this.handleError}
