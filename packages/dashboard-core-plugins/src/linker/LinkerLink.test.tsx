@@ -152,7 +152,6 @@ it('calls onClick when the link is clicked and onDelete on alt-click and button 
   makeLinkerLink({ onClick, onDelete });
 
   const linkPath = screen.getByTestId('link-select');
-  fireEvent.mouseOver(linkPath);
   fireEvent.click(linkPath);
   expect(onClick).toHaveBeenCalledTimes(1);
 

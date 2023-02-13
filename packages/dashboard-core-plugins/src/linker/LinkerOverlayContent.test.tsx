@@ -1,13 +1,14 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PanelManager } from '@deephaven/dashboard';
-import GoldenLayout from '@deephaven/golden-layout';
+import GoldenLayout, { Config } from '@deephaven/golden-layout';
 import LinkerOverlayContent from './LinkerOverlayContent';
+import { Link } from './LinkerUtils';
 
 const LINKER_OVERLAY_MESSAGE = 'TEST_MESSAGE';
 
 function makeLayout() {
-  return new GoldenLayout({});
+  return new GoldenLayout({} as Config, undefined);
 }
 
 function makePanelManager(layout = makeLayout()) {
@@ -15,22 +16,28 @@ function makePanelManager(layout = makeLayout()) {
 }
 
 function mountOverlay({
-  links = [],
+  links = [] as Link[],
+  selectedIds = new Set<string>(),
   messageText = LINKER_OVERLAY_MESSAGE,
   onLinkDeleted = jest.fn(),
   onAllLinksDeleted = jest.fn(),
   onCancel = jest.fn(),
   onDone = jest.fn(),
+  onLinksUpdated = jest.fn(),
+  onLinkSelected = jest.fn(),
   panelManager = makePanelManager(),
 } = {}) {
   return render(
     <LinkerOverlayContent
       links={links}
+      selectedIds={selectedIds}
       messageText={messageText}
       onLinkDeleted={onLinkDeleted}
       onAllLinksDeleted={onAllLinksDeleted}
       onCancel={onCancel}
       onDone={onDone}
+      onLinksUpdated={onLinksUpdated}
+      onLinkSelected={onLinkSelected}
       panelManager={panelManager}
     />
   );
@@ -41,7 +48,14 @@ it('calls appropriate functions on button and key presses', async () => {
   const onAllLinksDeleted = jest.fn();
   const onCancel = jest.fn();
   const onDone = jest.fn();
-  mountOverlay({ onLinkDeleted, onAllLinksDeleted, onCancel, onDone });
+  const selectedIds = new Set<string>(['TEST_ID']);
+  mountOverlay({
+    onLinkDeleted,
+    onAllLinksDeleted,
+    onCancel,
+    onDone,
+    selectedIds,
+  });
 
   const dialog = screen.getByTestId('linker-toast-dialog');
   expect(dialog).toHaveTextContent(LINKER_OVERLAY_MESSAGE);
@@ -56,9 +70,9 @@ it('calls appropriate functions on button and key presses', async () => {
   fireEvent.click(doneButton);
   expect(onDone).toHaveBeenCalled();
 
-  fireEvent.keyDown(window, { key: 'Escape' });
+  fireEvent.keyDown(dialog, { key: 'Escape' });
   expect(onCancel).toHaveBeenCalled();
-  fireEvent.keyDown(window, { key: 'Delete' });
-  fireEvent.keyDown(window, { key: 'Backspace' });
-  // expect(onLinkDeleted).toHaveBeenCalledTimes(2);
+  fireEvent.keyDown(document, { key: 'Delete' });
+  fireEvent.keyDown(document, { key: 'Backspace' });
+  expect(onLinkDeleted).toHaveBeenCalledTimes(2);
 });

@@ -1,3 +1,4 @@
+import { PanelComponent } from '@deephaven/dashboard';
 import { TypeValue as FilterTypeValue } from '@deephaven/filters';
 import LinkerUtils, {
   Link,
@@ -5,6 +6,8 @@ import LinkerUtils, {
   LinkPoint,
   LinkColumn,
   isLinkableColumn,
+  isLinkableFromPanel,
+  isLinkablePanel,
 } from './LinkerUtils';
 
 function makeLinkPoint(
@@ -34,6 +37,22 @@ function makeLink(
 ): Link {
   return { start, end, id, isReversed, type, operator };
 }
+
+function makeGridPanel() {
+  return {
+    props: { inputFilters: [] },
+    state: { panelState: null },
+  };
+}
+
+test('Panels are not linkable if they do not have the required functions', () => {
+  const gridPanel = makeGridPanel();
+  const panel = (gridPanel as unknown) as PanelComponent;
+  // isLinkableFromPanel requires the getCoordinateForColumn method
+  expect(isLinkableFromPanel(panel)).toBe(false);
+  // isLinkablePanel requires getCoordinateForColumn, setFilterMap, and unsetFilterValue methods
+  expect(isLinkablePanel(panel)).toBe(false);
+});
 
 test("isLinkableColumn returns false if column description starts with 'Preview of type:'", () => {
   let column = makeLinkColumn(`COLUMN_A`, 'int');
@@ -158,7 +177,7 @@ it('clones links properly', () => {
   const links: Link[] = [];
   for (let i = 0; i < 3; i += 1) {
     const start = makeLinkPoint('PANEL_ID_A', 'COLUMN_A', 'int');
-    const end = makeLinkPoint('PANEL_ID_B', 'COLUMN_A', 'long');
+    const end = makeLinkPoint('PANEL_ID_B', 'COLUMN_B', 'long');
     const link = makeLink(start, end, 'LINK_ID', 'tableLink');
     links.push(link);
   }

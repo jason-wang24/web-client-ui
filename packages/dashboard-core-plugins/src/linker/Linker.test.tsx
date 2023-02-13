@@ -1,35 +1,59 @@
-// import React from 'react';
-// import { fireEvent, render, screen } from '@testing-library/react';
-// import Linker from './Linker';
+import React from 'react';
+import { render } from '@testing-library/react';
+import { PanelManager } from '@deephaven/dashboard';
+import GoldenLayout, { Config } from '@deephaven/golden-layout';
+import { createMockStore } from '@deephaven/redux';
+import { Provider } from 'react-redux';
+import ToolType from './ToolType';
+import Linker from './Linker';
+import { Link } from './LinkerUtils';
 
-// function makeLinker({
-//   x1 = 10,
-//   x2 = 50,
-//   y1 = 10,
-//   y2 = 10,
-//   isSelected = true,
-//   startColumnType = 'java.lang.String',
-//   id = 'TEST_ID',
-//   className = 'linker-link link-is-selected',
-//   operator = FilterType.startsWith,
-//   onClick = jest.fn(),
-//   onDelete = jest.fn(),
-//   onOperatorChanged = jest.fn(),
-// } = {}) {
-//   return render(
-//     <Linker
-//       x1={x1}
-//       x2={x2}
-//       y1={y1}
-//       y2={y2}
-//       id={id}
-//       className={className}
-//       operator={operator}
-//       isSelected={isSelected}
-//       startColumnType={startColumnType}
-//       onClick={onClick}
-//       onDelete={onDelete}
-//       onOperatorChanged={onOperatorChanged}
-//     />
-//   );
-// }
+const store = createMockStore();
+
+function makeLayout() {
+  return new GoldenLayout({} as Config, undefined);
+}
+
+function makePanelManager(layout = makeLayout()) {
+  return new PanelManager(layout);
+}
+
+function mountLinker({
+  links = [] as Link[],
+  timeZone = 'TIMEZONE',
+  activeTool = ToolType.LINKER,
+  localDashboardId = 'TEST_ID',
+  layout = makeLayout(),
+  panelManager = makePanelManager(),
+  setActiveTool = jest.fn(),
+  setDashboardLinks = jest.fn(),
+  addDashboardLinks = jest.fn(),
+  deleteDashboardLinks = jest.fn(),
+  setDashboardIsolatedLinkerPanelId = jest.fn(),
+  setDashboardColumnSelectionValidator = jest.fn(),
+} = {}) {
+  return render(
+    <Provider store={store}>
+      <Linker
+        links={links}
+        timeZone={timeZone}
+        activeTool={activeTool}
+        localDashboardId={localDashboardId}
+        layout={layout}
+        panelManager={panelManager}
+        setActiveTool={setActiveTool}
+        setDashboardLinks={setDashboardLinks}
+        addDashboardLinks={addDashboardLinks}
+        deleteDashboardLinks={deleteDashboardLinks}
+        setDashboardIsolatedLinkerPanelId={setDashboardIsolatedLinkerPanelId}
+        setDashboardColumnSelectionValidator={
+          setDashboardColumnSelectionValidator
+        }
+      />
+    </Provider>
+  );
+}
+
+it('mounts and unmounts successfully without crashing', () => {
+  mountLinker();
+});
