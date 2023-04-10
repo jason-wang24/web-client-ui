@@ -137,7 +137,7 @@ describe('tests scenarios where an invalid link type should be returned', () => 
     expect(LinkerUtils.getLinkType(start, end)).toBe('invalid');
   });
 
-  it('returns invalid target panel component is incompatible', () => {
+  it('returns invalid if target panel component is incompatible', () => {
     const start = makeLinkPoint(
       'PANEL_ID_A',
       'COLUMN_A',

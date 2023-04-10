@@ -1,9 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { PanelManager } from '@deephaven/dashboard';
+import {
+  OpenedPanelMap,
+  PanelComponent,
+  PanelManager,
+} from '@deephaven/dashboard';
 import GoldenLayout, { Config } from '@deephaven/golden-layout';
 import LinkerOverlayContent from './LinkerOverlayContent';
-import { Link } from './LinkerUtils';
 
 const LINKER_OVERLAY_MESSAGE = 'TEST_MESSAGE';
 
@@ -12,7 +15,29 @@ function makeLayout() {
 }
 
 function makePanelManager(layout = makeLayout()) {
-  return new PanelManager(layout);
+  const PANEL_ID_A = 'PANEL_ID_A';
+  const PANEL_ID_B = 'PANEL_ID_B';
+  const openedMap: OpenedPanelMap = new Map([
+    [
+      PANEL_ID_A,
+      {
+        getCoordinateForColumn: jest.fn(() => {
+          const coordinate = [5, 5];
+          return coordinate; // make coordinates here
+        }),
+      } as PanelComponent,
+    ],
+    [
+      PANEL_ID_B,
+      {
+        getCoordinateForColumn: jest.fn(() => {
+          const coordinate = [50, 50];
+          return coordinate; // make coordinates here
+        }),
+      } as PanelComponent,
+    ],
+  ]);
+  return new PanelManager(layout, undefined, undefined, openedMap);
 }
 
 function mountOverlay({
